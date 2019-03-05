@@ -1,0 +1,14 @@
+list_of_ports:
+  - 2376:2380
+  - 7946:7999
+  - 30000:32767
+  - 6781:6785
+  - 4789
+  - 80
+  - 8000:9400
+
+list_of_packages:
+    - docker-engine
+
+services_to_startenable:
+    - docker

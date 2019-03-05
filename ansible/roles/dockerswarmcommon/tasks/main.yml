@@ -1,0 +1,69 @@
+- name: Disable SELinux
+  selinux:
+    state: disabled
+
+- name: setenforce 0
+  command: setenforce 0
+
+- name: setenforce 0
+  command: sed -i --follow-symlinks 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux
+
+- name: modprobe
+  modprobe:
+    name: br_netfilter
+    state: present
+
+- name: modprobe 2
+  shell: sysctl -p
+
+- name: update kernel settings
+  sysctl:
+    name: net.bridge.bridge-nf-call-iptables
+    value: 1
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+- name: Allow Required Ports
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: "{{ item }}"
+    ctstate: NEW,ESTABLISHED
+    jump: ACCEPT
+  with_items: "{{ list_of_ports }}"
+
+- name: delete repo file if exists
+  file:
+    path: /etc/yum.repos.d/docker.repo
+    state: absent
+
+
+- name: Adding docker repo
+  blockinfile:
+    dest: /etc/yum.repos.d/docker.repo
+    block: |
+        [dockerrepo]
+        name=Docker Repository
+        baseurl=https://yum.dockerproject.org/repo/main/centos/$releasever/
+        enabled=1
+        gpgcheck=1
+        gpgkey=https://yum.dockerproject.org/gpg
+    state: present
+    create: yes
+
+
+- name: Install all packages dependencies
+  package:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items: "{{ list_of_packages }}"
+
+
+- name: Start and Enable docker
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items: "{{ services_to_startenable }}"

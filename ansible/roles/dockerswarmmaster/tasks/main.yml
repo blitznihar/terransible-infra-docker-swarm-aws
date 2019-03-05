@@ -1,0 +1,32 @@
+- name: Initialize Docker Swarm Cluster
+  shell: docker swarm init --advertise-addr eth0:2377
+
+- name: pause for Docker Swarm Cluster to Initialize
+  pause:
+    seconds: 60
+
+- name: Capture command to run
+  command: docker swarm join-token worker
+  register: torun
+
+- name: Print command to run
+  debug:
+    var: torun.stdout_lines
+
+- name: Capture command to run
+  shell: docker swarm join-token worker > /tmp/joincommand.sh
+  register: torun
+
+- name: Clean up join command
+  lineinfile:
+    path: /tmp/joincommand.sh
+    regexp: 'To add a worker to this swarm, run the following command:'
+    state: absent
+
+- name: Fetch joincommand.sh
+  fetch:
+    src: /tmp/joincommand.sh
+    dest: ./roles/dockerswarmminion/files/
+    flat: yes
+    mode: 0774
+    fail_on_missing: yes

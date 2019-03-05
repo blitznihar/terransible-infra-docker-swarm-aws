@@ -1,0 +1,10 @@
+---
+- name: Create Docker Swarm Minion
+  hosts: all
+  gather_facts: true
+  become: yes
+  become_method: sudo
+  tags: [k8sminion]
+  roles:
+  - dockerswarmcommon
+  - dockerswarmminion
